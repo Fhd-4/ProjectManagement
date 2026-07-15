@@ -18,6 +18,7 @@ namespace ProjectManagement.Controllers
             _context = context;
         }
 
+        // test
         // 1. الـ EndPoint الأول: لقراءة وعرض كل الموظفين (GET)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
