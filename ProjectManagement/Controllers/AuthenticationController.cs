@@ -78,5 +78,22 @@ namespace ProjectManagement.Controllers
 
             return Ok(users);
         }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return NotFound(new { Message = "المستخدم غير موجود!" });
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "تم تغيير كلمة المرور بنجاح!" });
+            }
+            return BadRequest(result.Errors);
+        }
+
     }
 }
