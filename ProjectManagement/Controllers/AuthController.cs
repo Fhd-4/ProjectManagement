@@ -97,6 +97,31 @@ namespace ProjectManagement.Controllers
 
             return Ok(users);
         }
+
+        // 4. الـ API الجديدة: تغيير الرقم السري للمستخدم
+        // الرابط حقها بيكون: POST api/Auth/change-password
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+        {
+            // 1. البحث عن المستخدم عن طريق الإيميل
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return NotFound("المستخدم غير موجود!");
+            }
+
+            // 2. تغيير الباسورد (الـ UserManager يتكفل بالتأكد من الباسورد القديمة وتشفير الجديدة تلقائياً)
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                // إذا الباسورد القديمة غلط أو الجديدة ما طابقت شروط القوة (أرقام وحروف) بيرجع الأخطاء هنا
+                return BadRequest(result.Errors);
+            }
+
+            return Ok("تم تغيير الرقم السري بنجاح!");
+        }
+
     }
 }
 
