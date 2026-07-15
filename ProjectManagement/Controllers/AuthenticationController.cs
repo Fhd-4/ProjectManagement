@@ -11,7 +11,7 @@ namespace ProjectManagement.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        public AuthenticationController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public AuthenticationController(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
         }
@@ -46,19 +46,22 @@ namespace ProjectManagement.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _signInManager.PasswordSignInAsync(
-                model.Email,
-                model.Password,
-                isPersistent: false,
-                lockoutOnFailure: false
-            );
+            // Find the user by email
+            var user = await _userManager.FindByEmailAsync(model.Email);
 
-            if (result.Succeeded)
+            if (user == null)
+                return Unauthorized(new { Message = "Invalid email or password" });
+
+            // Check the password
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
+
+            if (!isPasswordValid)
+                return Unauthorized(new { Message = "Invalid email or password" });
+
+            return Ok(new
             {
-                return Ok(new { Message = "Logged in successfully!" });
-            }
-
-            return Unauthorized(new { Message = "Invalid email or password" });
+                Message = "Logged in successfully!"
+            });
         }
 
         // 3. Get All Users Endpoint
@@ -97,4 +100,4 @@ namespace ProjectManagement.Controllers
     }
 
 }
-}
+
