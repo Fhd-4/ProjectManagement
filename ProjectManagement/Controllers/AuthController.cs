@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.DTOs;
 using System.IdentityModel.Tokens.Jwt;
@@ -29,7 +30,7 @@ namespace ProjectManagement.Controllers
 
             var user = new IdentityUser
             {
-                UserName = model.Email,
+                UserName = model.Username,
                 Email = model.Email
             };
 
@@ -79,5 +80,25 @@ namespace ProjectManagement.Controllers
 
             return Unauthorized("الإيميل أو الرقم السري غير صحيح!");
         }
+
+        // 3. ⭐️ الـ API الجديدة: جلب كل المستخدمين المسجلين في النظام
+        // الرابط حقها بيكون: GET api/Auth/all-users
+        [HttpGet("all-users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            // بنسحب اليوزرز وناخذ فقط (الـ ID، الإيميل، والـ Username) عشان الحماية وما نرسل الـ Password Hash
+            var users = await _userManager.Users
+                .Select(u => new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.Email
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
     }
 }
+
+    
