@@ -90,7 +90,6 @@ namespace ProjectManagement.Controllers
             var users = await _userManager.Users
                 .Select(u => new
                 {
-                    u.Id,
                     u.UserName,
                     u.Email
                 })
