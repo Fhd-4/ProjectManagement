@@ -122,6 +122,26 @@ namespace ProjectManagement.Controllers
             return Ok("تم تغيير الرقم السري بنجاح!");
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            // تأكد إنها تقرأ model.Email 
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return NotFound("المستخدم غير موجود!");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            return Ok(new
+            {
+                Message = "تم توليد رمز إعادة تعيين كلمة المرور بنجاح!",
+                Token = token
+            });
+        }
+
+
     }
 }
 
