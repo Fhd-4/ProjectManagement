@@ -11,12 +11,9 @@ namespace ProjectManagement.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-
         public AuthenticationController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
         }
 
         // 1. Register Endpoint
@@ -86,14 +83,18 @@ namespace ProjectManagement.Controllers
                 return BadRequest(ModelState);
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                return NotFound(new { Message = "المستخدم غير موجود!" });
+                return NotFound(new { Message = "User not found!" });
             var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
             if (result.Succeeded)
             {
-                return Ok(new { Message = "تم تغيير كلمة المرور بنجاح!" });
+                return Ok(new { Message = "Password changed successfully!" });
             }
+
             return BadRequest(result.Errors);
         }
 
     }
+
+}
 }
