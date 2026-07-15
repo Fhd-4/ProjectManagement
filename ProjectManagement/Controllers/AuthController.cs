@@ -141,6 +141,28 @@ namespace ProjectManagement.Controllers
             });
         }
 
+        // 6. الـ API الخاصة بإعادة تعيين كلمة المرور (Reset Password)
+        // POST api/Auth/reset-password
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            // البحث عن المستخدم بالإيميل
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return NotFound("المستخدم غير موجود!");
+            }
+
+            // إعادة تعيين الباسورد باستخدام الـ Token المشفر اللي نسخناه من الخطوة السابقة
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok("تم إعادة تعيين كلمة المرور الجديدة بنجاح!");
+        }
 
     }
 }
