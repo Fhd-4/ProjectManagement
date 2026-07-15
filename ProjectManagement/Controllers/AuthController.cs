@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -132,7 +132,8 @@ namespace ProjectManagement.Controllers
                 return NotFound("المستخدم غير موجود!");
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            // توليد رمز مكون من 6 أرقام (OTP) باستخدام الـ Email token provider
+            var token = await _userManager.GenerateUserTokenAsync(user, "Email", "ResetPassword");
 
             return Ok(new
             {
@@ -153,8 +154,16 @@ namespace ProjectManagement.Controllers
                 return NotFound("المستخدم غير موجود!");
             }
 
-            // إعادة تعيين الباسورد باستخدام الـ Token المشفر اللي نسخناه من الخطوة السابقة
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            // التحقق من الرمز المكون من 6 أرقام
+            var isValid = await _userManager.VerifyUserTokenAsync(user, "Email", "ResetPassword", model.Token);
+            if (!isValid)
+            {
+                return BadRequest(new[] { new { code = "InvalidToken", description = "رمز إعادة التعيين غير صحيح أو انتهت صلاحيته!" } });
+            }
+
+            // توليد توكن إعادة تعيين كلمة المرور الفعلي داخلياً لإتمام العملية بـ ResetPasswordAsync
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
 
             if (!result.Succeeded)
             {
