@@ -18,5 +18,64 @@ namespace ProjectManagement.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
         }
+
+        // 1. Register Endpoint
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "User registered successfully!" });
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+        // 2. Login Endpoint
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _signInManager.PasswordSignInAsync(
+                model.Email,
+                model.Password,
+                isPersistent: false,
+                lockoutOnFailure: false
+            );
+
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "Logged in successfully!" });
+            }
+
+            return Unauthorized(new { Message = "Invalid email or password" });
+        }
+
+        // 3. Get All Users Endpoint
+        [HttpGet("users")]
+        public IActionResult GetAllUsers()
+        {
+            var users = _userManager.Users.Select(u => new
+            {
+                u.Id,
+                u.Email,
+                u.UserName
+            }).ToList();
+
+            return Ok(users);
+        }
     }
 }
