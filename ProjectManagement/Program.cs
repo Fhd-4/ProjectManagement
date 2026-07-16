@@ -1,4 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 public partial class Program
 {
@@ -8,17 +12,51 @@ public partial class Program
 
         // Add services to the container.
 
+        // 1. إعداد نص الاتصال بقاعدة البيانات
         builder.Services.AddDbContext<ProjectManagement.Data.ApplicationDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+        // 2. إضافة خدمات ASP.NET Core Identity لإدارة المستخدمين والأدوار
+        builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+        {
+            // هنا تقدر تعدل شروط الباسورد مستقبلاً لو حبيت تسهلها
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequiredLength = 6;
+        })
+        .AddEntityFrameworkStores<ProjectManagement.Data.ApplicationDbContext>()
+        .AddDefaultTokenProviders();
+
+        // 3. إضافة إعدادات التحقق الأمنية باستخدام الـ JWT Bearer Token
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = "ProjectManagementSecretIssuer",
+                ValidAudience = "ProjectManagementSecretAudience",
+                // ملاحظة: هذا مفتاح سري طويل ومشفر لتوقيع الـ Tokens ومنع تزويرها
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("FahdProjectManagementSecretKey2026_JWT_Secure!"))
+            };
+        });
+
         builder.Services.AddControllers();
+
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-
         var app = builder.Build();
 
-        //// Configure the HTTP request pipeline.
+        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -27,6 +65,8 @@ public partial class Program
 
         app.UseHttpsRedirection();
 
+        // ⚠️ الترتيب هنا حساس جداً: التوثيق أولاً ثم الصلاحيات
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();
