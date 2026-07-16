@@ -1,6 +1,6 @@
 ﻿namespace ProjectManagement.Models
 {
-    public class test
+    public class testMy
     {
         
     }
