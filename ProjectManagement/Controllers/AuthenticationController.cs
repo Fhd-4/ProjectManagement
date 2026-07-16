@@ -134,6 +134,25 @@ namespace ProjectManagement.Controllers
             return BadRequest(result.Errors);
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if (user == null)
+                return NotFound(new { Message = "User not found!" });
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            return Ok(new
+            {
+                Message = "Password reset token generated successfully!",
+                Token = token
+            });
+        }
     }
 
 }
