@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using ProjectManagement.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.DTOs;
+using ProjectManagement.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace ProjectManagement.Controllers
 {
@@ -11,9 +15,12 @@ namespace ProjectManagement.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        public AuthenticationController(UserManager<ApplicationUser> userManager)
+        private readonly IConfiguration _configuration;
+
+        public AuthenticationController(UserManager<ApplicationUser> userManager, IConfiguration configuration  )
         {
             _userManager = userManager;
+            _configuration = configuration;
         }
 
         // 1. Register Endpoint
@@ -46,23 +53,53 @@ namespace ProjectManagement.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Find the user by email
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if (user == null)
                 return Unauthorized(new { Message = "Invalid email or password" });
 
-            // Check the password
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
 
             if (!isPasswordValid)
                 return Unauthorized(new { Message = "Invalid email or password" });
 
+            // Create claims
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
+        new Claim(ClaimTypes.Email, user.Email!),
+        new Claim(ClaimTypes.Name, user.UserName!)
+    };
+
+            // Create signing key
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
+            );
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            // Create token
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds
+            );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
             return Ok(new
             {
-                Message = "Logged in successfully!"
+                Message = "Logged in successfully!",
+                Token = jwt,
+                Expiration = token.ValidTo
             });
         }
+
+
+
+
 
         // 3. Get All Users Endpoint
         // test
