@@ -61,14 +61,15 @@ public partial class Program
                 Version = "v1"
             });
 
-            // إضافة زر Authorize لإرسال الـ JWT Token في Swagger UI
+            // إضافة زر Authorize بصيغة Bearer (http, Bearer)
             c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
             {
-                Description = "الرجاء كتابة الكلمة Bearer متبوعة بمكان فارغ ثم التوكن. مثال: 'Bearer eyJhbGci...' ",
+                Description = "Enter JWT Token",
                 Name = "Authorization",
                 In = Microsoft.OpenApi.ParameterLocation.Header,
-                Type = Microsoft.OpenApi.SecuritySchemeType.ApiKey,
-                Scheme = "Bearer"
+                Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
             });
 
             c.AddSecurityRequirement((doc) => new Microsoft.OpenApi.OpenApiSecurityRequirement
