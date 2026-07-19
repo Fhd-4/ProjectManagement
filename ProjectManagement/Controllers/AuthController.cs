@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.DTOs;
+using ProjectManagement.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -13,11 +14,15 @@ namespace ProjectManagement.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AuthController(UserManager<IdentityUser> userManager)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
         }
         // Hi am yusra
         // 1. رابط تسجيل حساب جديد: api/Auth/register
@@ -28,7 +33,7 @@ namespace ProjectManagement.Controllers
             if (userExists != null)
                 return BadRequest("هذا البريد الإلكتروني مسجل مسبقاً!");
 
-            var user = new IdentityUser
+            var user = new ApplicationUser
             {
                 UserName = model.Username,
                 Email = model.Email
@@ -54,6 +59,7 @@ namespace ProjectManagement.Controllers
             // التحقق من الإيميل وتطابق الباسورد المشفرة
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
+                var roles = await _userManager.GetRolesAsync(user);
                 // توليد كرت الأمان (Token) للمستخدم
                 var authClaims = new List<Claim>
                 {
@@ -62,6 +68,11 @@ namespace ProjectManagement.Controllers
                     new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
+
+                foreach (var role in roles)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, role));
+                }
 
                 var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("FahdProjectManagementSecretKey2026_JWT_Secure!"));
 
@@ -80,7 +91,24 @@ namespace ProjectManagement.Controllers
                     username = user.UserName,
                     email = user.Email,
                     token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    expiration = token.ValidTo,
+
+                    user = new
+                    {
+                        id = user.Id,
+                        username = user.UserName,
+                        email = user.Email,
+                        name = user.Name,
+                        title = user.Title,
+                        company = user.Company,
+                        profilePhoto = user.ProfilePhoto,
+                        backgroundPhoto = user.BackgroundPhoto,
+                        location = user.Location,
+                        website = user.Website,
+                        linkedIn = user.LinkedIn,
+                        whatsApp = user.WhatsApp,
+                        roles = roles
+                    }
                 });
             }
 
@@ -179,7 +207,86 @@ namespace ProjectManagement.Controllers
 
             return Ok("تم إعادة تعيين كلمة المرور الجديدة بنجاح!");
         }
+        [HttpPost("create-role")]
+        public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto model)
+        {
+            var roleExists = await _roleManager.RoleExistsAsync(model.RoleName);
 
+            if (roleExists)
+            {
+                return BadRequest("Role already exists");
+            }
+
+            var role = new IdentityRole(model.RoleName);
+
+            var result = await _roleManager.CreateAsync(role);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok("Role created successfully");
+        }
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            var roles = await _roleManager.Roles
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Name
+                })
+                .ToListAsync();
+
+            return Ok(roles);
+        }
+        [HttpPost("create-superadmin")]
+        public async Task<IActionResult> CreateSuperAdmin(
+    [FromBody] CreateSuperAdminDto model)
+        {
+            // Check if SuperAdmin role exists
+            var roleExists = await _roleManager.RoleExistsAsync("SuperAdmin");
+
+            if (!roleExists)
+            {
+                await _roleManager.CreateAsync(new IdentityRole("SuperAdmin"));
+            }
+
+
+            // Check if user already exists
+            var userExists = await _userManager.FindByEmailAsync(model.Email);
+
+            if (userExists != null)
+            {
+                return BadRequest("User already exists");
+            }
+
+
+            // Create the user
+            var user = new ApplicationUser
+            {
+                UserName = model.Username,
+                Email = model.Email,
+                EmailConfirmed = true
+            };
+
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+
+            // Assign SuperAdmin role
+            await _userManager.AddToRoleAsync(user, "SuperAdmin");
+
+
+            return Ok("SuperAdmin created successfully");
+        }
     }
 }
 
