@@ -2,6 +2,6 @@
 {
     public class Skills
     {
-        public string Skill { get; set; } 
+        public string? Skill { get; set; } 
     }
 }
