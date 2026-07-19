@@ -23,7 +23,7 @@ namespace ProjectManagement.Controllers
             _context = context;
         }
 
-        // GET: api/Profile/me
+        // GET: api/Profile/me  أو  GET: api/Profile
         [HttpGet("me")]
         [HttpGet]
         public async Task<IActionResult> GetMyProfile()
@@ -44,9 +44,11 @@ namespace ProjectManagement.Controllers
             return Ok(profileDto);
         }
 
-        // PUT: api/Profile/me
+        // PUT/POST: api/Profile/me  أو  api/Profile (حفظ وإنشاء بيانات الكرت بالكامل للمستخدم)
         [HttpPut("me")]
+        [HttpPost("me")]
         [HttpPut]
+        [HttpPost]
         public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateProfileDto model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -61,6 +63,7 @@ namespace ProjectManagement.Controllers
                 return NotFound("المستخدم غير موجود!");
             }
 
+            // تحديث البيانات الشخصية والصورة الشخصية والغلاف وحسابات التواصل
             user.ProfilePhoto = model.ProfilePhoto;
             user.BackgroundPhoto = model.BackgroundPhoto;
             user.Name = model.Name;
@@ -79,7 +82,7 @@ namespace ProjectManagement.Controllers
                 return BadRequest(result.Errors);
             }
 
-            // تحديث المهارات
+            // تحديث المهارات (Skills)
             if (model.Skills != null)
             {
                 var existingSkills = await _context.Skills.Where(s => s.UserId == user.Id).ToListAsync();
@@ -94,7 +97,7 @@ namespace ProjectManagement.Controllers
                 }
             }
 
-            // تحديث الخبرات
+            // تحديث الخبرات (Experiences)
             if (model.Experiences != null)
             {
                 var existingExperiences = await _context.Experiences.Where(e => e.UserId == user.Id).ToListAsync();
@@ -109,7 +112,7 @@ namespace ProjectManagement.Controllers
                 }
             }
 
-            // تحديث التعليم
+            // تحديث التعليم (Educations)
             if (model.Educations != null)
             {
                 var existingEducations = await _context.Educations.Where(e => e.UserId == user.Id).ToListAsync();
@@ -129,16 +132,25 @@ namespace ProjectManagement.Controllers
             var updatedProfile = await BuildUserProfileDtoAsync(user);
             return Ok(new
             {
-                Message = "تم تحديث الملف الشخصي بنجاح!",
+                Message = "تم حفظ وتحديث كرت البيانات بنجاح!",
                 Profile = updatedProfile
             });
         }
 
-        // GET: api/Profile/{userId}
+        // GET: api/Profile/preview/{userId}  أو  GET: api/Profile/{userId} (معاينة كرت العميل العامة - حق زرر العين)
+        [AllowAnonymous]
         [HttpGet("{userId}")]
+        [HttpGet("preview/{userId}")]
+        [HttpGet("public/{userId}")]
         public async Task<IActionResult> GetUserProfileById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                // إذا لم يكن ID قد يكون اسم المستخدم UserName
+                user = await _userManager.FindByNameAsync(userId);
+            }
+
             if (user == null)
             {
                 return NotFound("المستخدم غير موجود!");
@@ -167,6 +179,8 @@ namespace ProjectManagement.Controllers
 
             return new UserProfileDto
             {
+                Id = user.Id,
+                Username = user.UserName,
                 ProfilePhoto = user.ProfilePhoto,
                 BackgroundPhoto = user.BackgroundPhoto,
                 Name = user.Name,

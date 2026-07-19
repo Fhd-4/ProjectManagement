@@ -1,7 +1,9 @@
-﻿namespace ProjectManagement.DTOs
+namespace ProjectManagement.DTOs
 {
     public class UserProfileDto
     {
+        public string? Id { get; set; }
+        public string? Username { get; set; }
         public string? ProfilePhoto { get; set; }
         public string? BackgroundPhoto { get; set; }
         public string? Name { get; set; }
