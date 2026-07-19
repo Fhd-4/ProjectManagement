@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using ProjectManagement.Models;
 using System.Text;
 
 public partial class Program
@@ -17,7 +18,7 @@ public partial class Program
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
         // 2. إضافة خدمات ASP.NET Core Identity لإدارة المستخدمين والأدوار
-        builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
             // هنا تقدر تعدل شروط الباسورد مستقبلاً لو حبيت تسهلها
             options.Password.RequireDigit = true;

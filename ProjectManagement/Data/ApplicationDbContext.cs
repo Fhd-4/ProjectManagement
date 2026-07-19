@@ -5,7 +5,7 @@ using ProjectManagement.Models;
 namespace ProjectManagement.Data
 {
     // غيرناه هنا ليرث من IdentityDbContext
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
@@ -15,6 +15,5 @@ namespace ProjectManagement.Data
         public DbSet<Experience> Experiences { get; set; }
         public DbSet<Education> Educations { get; set; }
         public DbSet<Employee> Employees { get; set; }
-        public DbSet<User> Users { get; set; }
     }
 }

@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-
-namespace ProjectManagement.Models
+﻿namespace ProjectManagement.DTOs
 {
-    public class ApplicationUser : IdentityUser
+    public class UpdateProfileDto
     {
         public string? ProfilePhoto { get; set; }
 
@@ -15,6 +13,8 @@ namespace ProjectManagement.Models
         public string? Company { get; set; }
 
         public string? About { get; set; }
+
+        public string? Phone { get; set; }
 
         public string? Location { get; set; }
 
