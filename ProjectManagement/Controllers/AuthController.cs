@@ -59,12 +59,18 @@ namespace ProjectManagement.Controllers
             // التحقق من الإيميل وتطابق الباسورد المشفرة
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
+                var roles = await _userManager.GetRolesAsync(user);
                 // توليد كرت الأمان (Token) للمستخدم
                 var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName!),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
+
+                foreach (var role in roles)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, role));
+                }
 
                 var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("FahdProjectManagementSecretKey2026_JWT_Secure!"));
 
@@ -79,7 +85,24 @@ namespace ProjectManagement.Controllers
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    expiration = token.ValidTo,
+
+                    user = new
+                    {
+                        id = user.Id,
+                        username = user.UserName,
+                        email = user.Email,
+                        name = user.Name,
+                        title = user.Title,
+                        company = user.Company,
+                        profilePhoto = user.ProfilePhoto,
+                        backgroundPhoto = user.BackgroundPhoto,
+                        location = user.Location,
+                        website = user.Website,
+                        linkedIn = user.LinkedIn,
+                        whatsApp = user.WhatsApp,
+                        roles = roles
+                    }
                 });
             }
 
