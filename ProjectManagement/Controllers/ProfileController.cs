@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Data;
 using ProjectManagement.DTOs;
 using ProjectManagement.Models;
 using System.Security.Claims;
@@ -13,10 +15,12 @@ namespace ProjectManagement.Controllers
     public class ProfileController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        public ProfileController(UserManager<ApplicationUser> userManager)
+        public ProfileController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         // GET: api/Profile/me
@@ -36,22 +40,7 @@ namespace ProjectManagement.Controllers
                 return NotFound("المستخدم غير موجود!");
             }
 
-            var profileDto = new UserProfileDto
-            {
-                ProfilePhoto = user.ProfilePhoto,
-                BackgroundPhoto = user.BackgroundPhoto,
-                Name = user.Name,
-                Title = user.Title,
-                Company = user.Company,
-                About = user.About,
-                Phone = user.PhoneNumber,
-                Email = user.Email,
-                Location = user.Location,
-                Website = user.Website,
-                LinkedIn = user.LinkedIn,
-                WhatsApp = user.WhatsApp
-            };
-
+            var profileDto = await BuildUserProfileDtoAsync(user);
             return Ok(profileDto);
         }
 
@@ -90,24 +79,58 @@ namespace ProjectManagement.Controllers
                 return BadRequest(result.Errors);
             }
 
+            // تحديث المهارات
+            if (model.Skills != null)
+            {
+                var existingSkills = await _context.Skills.Where(s => s.UserId == user.Id).ToListAsync();
+                _context.Skills.RemoveRange(existingSkills);
+
+                foreach (var skillName in model.Skills)
+                {
+                    if (!string.IsNullOrWhiteSpace(skillName))
+                    {
+                        _context.Skills.Add(new Skills { Skill = skillName, UserId = user.Id });
+                    }
+                }
+            }
+
+            // تحديث الخبرات
+            if (model.Experiences != null)
+            {
+                var existingExperiences = await _context.Experiences.Where(e => e.UserId == user.Id).ToListAsync();
+                _context.Experiences.RemoveRange(existingExperiences);
+
+                foreach (var exp in model.Experiences)
+                {
+                    if (exp != null)
+                    {
+                        _context.Experiences.Add(new Experience { Title = exp.Title, Company = exp.Company, UserId = user.Id });
+                    }
+                }
+            }
+
+            // تحديث التعليم
+            if (model.Educations != null)
+            {
+                var existingEducations = await _context.Educations.Where(e => e.UserId == user.Id).ToListAsync();
+                _context.Educations.RemoveRange(existingEducations);
+
+                foreach (var edu in model.Educations)
+                {
+                    if (edu != null)
+                    {
+                        _context.Educations.Add(new Education { Degree = edu.Degree, Field = edu.Field, UserId = user.Id });
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            var updatedProfile = await BuildUserProfileDtoAsync(user);
             return Ok(new
             {
                 Message = "تم تحديث الملف الشخصي بنجاح!",
-                Profile = new UserProfileDto
-                {
-                    ProfilePhoto = user.ProfilePhoto,
-                    BackgroundPhoto = user.BackgroundPhoto,
-                    Name = user.Name,
-                    Title = user.Title,
-                    Company = user.Company,
-                    About = user.About,
-                    Phone = user.PhoneNumber,
-                    Email = user.Email,
-                    Location = user.Location,
-                    Website = user.Website,
-                    LinkedIn = user.LinkedIn,
-                    WhatsApp = user.WhatsApp
-                }
+                Profile = updatedProfile
             });
         }
 
@@ -121,7 +144,28 @@ namespace ProjectManagement.Controllers
                 return NotFound("المستخدم غير موجود!");
             }
 
-            var profileDto = new UserProfileDto
+            var profileDto = await BuildUserProfileDtoAsync(user);
+            return Ok(profileDto);
+        }
+
+        private async Task<UserProfileDto> BuildUserProfileDtoAsync(ApplicationUser user)
+        {
+            var skills = await _context.Skills
+                .Where(s => s.UserId == user.Id)
+                .Select(s => s.Skill)
+                .ToListAsync();
+
+            var experiences = await _context.Experiences
+                .Where(e => e.UserId == user.Id)
+                .Select(e => new ExperienceDto { Title = e.Title, Company = e.Company })
+                .ToListAsync();
+
+            var educations = await _context.Educations
+                .Where(e => e.UserId == user.Id)
+                .Select(e => new EducationDto { Degree = e.Degree, Field = e.Field })
+                .ToListAsync();
+
+            return new UserProfileDto
             {
                 ProfilePhoto = user.ProfilePhoto,
                 BackgroundPhoto = user.BackgroundPhoto,
@@ -134,10 +178,11 @@ namespace ProjectManagement.Controllers
                 Location = user.Location,
                 Website = user.Website,
                 LinkedIn = user.LinkedIn,
-                WhatsApp = user.WhatsApp
+                WhatsApp = user.WhatsApp,
+                Skills = skills,
+                Experiences = experiences,
+                Educations = educations
             };
-
-            return Ok(profileDto);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace ProjectManagement.DTOs
+namespace ProjectManagement.DTOs
 {
     public class UpdateProfileDto
     {
@@ -23,5 +23,11 @@
         public string? LinkedIn { get; set; }
 
         public string? WhatsApp { get; set; }
+
+        public List<string?>? Skills { get; set; }
+
+        public List<ExperienceDto>? Experiences { get; set; }
+
+        public List<EducationDto>? Educations { get; set; }
     }
 }

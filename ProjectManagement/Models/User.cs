@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace ProjectManagement.Models
 {
@@ -23,5 +23,9 @@ namespace ProjectManagement.Models
         public string? LinkedIn { get; set; }
 
         public string? WhatsApp { get; set; }
+
+        public ICollection<Skills> Skills { get; set; } = new List<Skills>();
+        public ICollection<Experience> Experiences { get; set; } = new List<Experience>();
+        public ICollection<Education> Educations { get; set; } = new List<Education>();
     }
 }
