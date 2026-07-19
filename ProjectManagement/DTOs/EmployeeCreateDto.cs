@@ -10,7 +10,7 @@ namespace ProjectManagement.DTOs
 
         [Required(ErrorMessage = "العنوان مطلوب")]
         public string Address { get; set; } = string.Empty;
-
+ 
         [Range(18, 60, ErrorMessage = "العمر يجب أن يكون بين 18 و 60 سنة")]
         public int Age { get; set; }
 

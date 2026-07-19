@@ -5,7 +5,7 @@ using ProjectManagement.Models;
 namespace ProjectManagement.Data
 {
     // غيرناه هنا ليرث من IdentityDbContext
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
