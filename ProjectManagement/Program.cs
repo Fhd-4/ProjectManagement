@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -53,7 +53,32 @@ public partial class Program
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+            {
+                Title = "ProjectManagement API",
+                Version = "v1"
+            });
+
+            // إضافة زر Authorize لإرسال الـ JWT Token في Swagger UI
+            c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
+            {
+                Description = "الرجاء كتابة الكلمة Bearer متبوعة بمكان فارغ ثم التوكن. مثال: 'Bearer eyJhbGci...' ",
+                Name = "Authorization",
+                In = Microsoft.OpenApi.ParameterLocation.Header,
+                Type = Microsoft.OpenApi.SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement((doc) => new Microsoft.OpenApi.OpenApiSecurityRequirement
+            {
+                {
+                    new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer"),
+                    new List<string>()
+                }
+            });
+        });
 
         var app = builder.Build();
 

@@ -1,7 +1,10 @@
 using Microsoft.OpenApi;
 
-internal class OpenApiReference
+namespace ProjectManagement
 {
-    public ReferenceType Type { get; set; }
-    public string? Id { get; set; }
+    internal class CustomOpenApiReference
+    {
+        public ReferenceType Type { get; set; }
+        public string? Id { get; set; }
+    }
 }

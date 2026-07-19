@@ -57,7 +57,9 @@ namespace ProjectManagement.Controllers
                 // توليد كرت الأمان (Token) للمستخدم
                 var authClaims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, user.UserName!),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+                    new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
@@ -73,6 +75,10 @@ namespace ProjectManagement.Controllers
 
                 return Ok(new
                 {
+                    id = user.Id,
+                    userId = user.Id,
+                    username = user.UserName,
+                    email = user.Email,
                     token = new JwtSecurityTokenHandler().WriteToken(token),
                     expiration = token.ValidTo
                 });
@@ -90,6 +96,7 @@ namespace ProjectManagement.Controllers
             var users = await _userManager.Users
                 .Select(u => new
                 {
+                    u.Id,
                     u.UserName,
                     u.Email
                 })
