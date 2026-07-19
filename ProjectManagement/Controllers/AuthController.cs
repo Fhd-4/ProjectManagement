@@ -211,7 +211,52 @@ namespace ProjectManagement.Controllers
 
             return Ok(roles);
         }
+        [HttpPost("create-superadmin")]
+        public async Task<IActionResult> CreateSuperAdmin(
+    [FromBody] CreateSuperAdminDto model)
+        {
+            // Check if SuperAdmin role exists
+            var roleExists = await _roleManager.RoleExistsAsync("SuperAdmin");
 
+            if (!roleExists)
+            {
+                await _roleManager.CreateAsync(new IdentityRole("SuperAdmin"));
+            }
+
+
+            // Check if user already exists
+            var userExists = await _userManager.FindByEmailAsync(model.Email);
+
+            if (userExists != null)
+            {
+                return BadRequest("User already exists");
+            }
+
+
+            // Create the user
+            var user = new ApplicationUser
+            {
+                UserName = model.Username,
+                Email = model.Email,
+                EmailConfirmed = true
+            };
+
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+
+            // Assign SuperAdmin role
+            await _userManager.AddToRoleAsync(user, "SuperAdmin");
+
+
+            return Ok("SuperAdmin created successfully");
+        }
     }
 }
 
