@@ -15,7 +15,7 @@ namespace ProjectManagement.Controllers
             _environment = environment;
         }
 
-        // POST: api/ImageUploader/Upload  أو  POST: api/ImageUploader
+        // POST: api/ImageUploader
         [HttpPost]
         public async Task<IActionResult> Upload( IFormFile file)
         {
