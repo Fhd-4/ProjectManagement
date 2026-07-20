@@ -15,16 +15,11 @@ namespace ProjectManagement.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
 
-        public ProfileController(
-            UserManager<ApplicationUser> userManager,
-            ApplicationDbContext context,
-            IWebHostEnvironment environment)
+        public ProfileController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
         {
             _userManager = userManager;
             _context = context;
-            _environment = environment;
         }
 
         // GET: api/Profile/me  أو  GET: api/Profile
@@ -143,120 +138,7 @@ namespace ProjectManagement.Controllers
             });
         }
 
-        // 📷 POST: api/Profile/upload-image  (رفع صورة عامة وإرجاع الرابط مباشر - يشتغل بدون توكن لتفادي خطأ 401)
-        [AllowAnonymous]
-        [HttpPost("upload-image")]
-        [HttpPost("upload-photo")]
-        public async Task<IActionResult> UploadImage(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("يرجى اختيار صورة للرفع!");
-            }
-
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-            if (!allowedExtensions.Contains(extension))
-            {
-                return BadRequest("صيغة الملف غير مدعومة! يرجى رفع صورة بصيغة (jpg, jpeg, png, gif, webp, svg)");
-            }
-
-            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var uploadsFolder = Path.Combine(webRootPath, "uploads");
-
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativeUrl = $"/uploads/{uniqueFileName}";
-            var fullUrl = $"{Request.Scheme}://{Request.Host}{relativeUrl}";
-
-            return Ok(new
-            {
-                Message = "تم رفع الصورة بنجاح!",
-                Url = fullUrl,
-                url = fullUrl,
-                FilePath = relativeUrl,
-                FileName = uniqueFileName
-            });
-        }
-
-        // 👤 POST: api/Profile/upload-profile-photo (رفع الصورة الشخصية وتحديث بروفايل المستخدم)
-        [AllowAnonymous]
-        [HttpPost("upload-profile-photo")]
-        public async Task<IActionResult> UploadProfilePhoto(IFormFile file)
-        {
-            var uploadResult = await SaveFileAndGetUrlAsync(file);
-            if (uploadResult.Error != null)
-            {
-                return BadRequest(uploadResult.Error);
-            }
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var user = await _userManager.FindByIdAsync(userId);
-                if (user != null)
-                {
-                    user.ProfilePhoto = uploadResult.FullUrl;
-                    await _userManager.UpdateAsync(user);
-                }
-            }
-
-            return Ok(new
-            {
-                Message = "تم رفع وتحديث الصورة الشخصية بنجاح!",
-                Url = uploadResult.FullUrl,
-                url = uploadResult.FullUrl,
-                ProfilePhoto = uploadResult.FullUrl,
-                FilePath = uploadResult.RelativeUrl
-            });
-        }
-
-        // 🖼️ POST: api/Profile/upload-background-photo (رفع صورة الغلاف وتحديث بروفايل المستخدم)
-        [AllowAnonymous]
-        [HttpPost("upload-background-photo")]
-        [HttpPost("upload-cover")]
-        public async Task<IActionResult> UploadBackgroundPhoto(IFormFile file)
-        {
-            var uploadResult = await SaveFileAndGetUrlAsync(file);
-            if (uploadResult.Error != null)
-            {
-                return BadRequest(uploadResult.Error);
-            }
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var user = await _userManager.FindByIdAsync(userId);
-                if (user != null)
-                {
-                    user.BackgroundPhoto = uploadResult.FullUrl;
-                    await _userManager.UpdateAsync(user);
-                }
-            }
-
-            return Ok(new
-            {
-                Message = "تم رفع وتحديث صورة الغلاف بنجاح!",
-                Url = uploadResult.FullUrl,
-                url = uploadResult.FullUrl,
-                BackgroundPhoto = uploadResult.FullUrl,
-                FilePath = uploadResult.RelativeUrl
-            });
-        }
-
-        // GET: api/Profile/preview/{userId}  أو  GET: api/Profile/{userId} (معاينة كرت العميل العامة)
+        // GET: api/Profile/preview/{userId}  أو  GET: api/Profile/{userId} (معاينة كرت العميل العامة - حق زر العين)
         [AllowAnonymous]
         [HttpGet("{userId}")]
         [HttpGet("preview/{userId}")]
@@ -276,43 +158,6 @@ namespace ProjectManagement.Controllers
 
             var profileDto = await BuildUserProfileDtoAsync(user);
             return Ok(profileDto);
-        }
-
-        private async Task<(string? FullUrl, string? RelativeUrl, string? Error)> SaveFileAndGetUrlAsync(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return (null, null, "يرجى اختيار صورة للرفع!");
-            }
-
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-            if (!allowedExtensions.Contains(extension))
-            {
-                return (null, null, "صيغة الملف غير مدعومة! يرجى رفع صورة بصيغة (jpg, jpeg, png, gif, webp, svg)");
-            }
-
-            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var uploadsFolder = Path.Combine(webRootPath, "uploads");
-
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativeUrl = $"/uploads/{uniqueFileName}";
-            var fullUrl = $"{Request.Scheme}://{Request.Host}{relativeUrl}";
-
-            return (fullUrl, relativeUrl, null);
         }
 
         private async Task<UserProfileDto> BuildUserProfileDtoAsync(ApplicationUser user)
