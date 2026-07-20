@@ -159,11 +159,9 @@ namespace ProjectManagement.Controllers
             });
         }
 
-        // GET: api/Profile/preview/{userId}  أو  GET: api/Profile/{userId} (معاينة كرت العميل العامة - حق زر العين)
+        // ⭐️ GET: api/Profile/user/{userId}  (جلب جميع بيانات المستخدم بالكامل عن طريق User ID)
         [AllowAnonymous]
-        [HttpGet("{userId}")]
-        [HttpGet("preview/{userId}")]
-        [HttpGet("public/{userId}")]
+        [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetUserProfileById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
