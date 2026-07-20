@@ -91,6 +91,7 @@ public partial class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
 
         // ⚠️ الترتيب هنا حساس جداً: التوثيق أولاً ثم الصلاحيات
         app.UseAuthentication();

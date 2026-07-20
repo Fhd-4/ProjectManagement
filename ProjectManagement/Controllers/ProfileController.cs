@@ -11,7 +11,6 @@ namespace ProjectManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class ProfileController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,6 +23,7 @@ namespace ProjectManagement.Controllers
         }
 
         // GET: api/Profile/me  أو  GET: api/Profile
+        [Authorize]
         [HttpGet("me")]
         [HttpGet]
         public async Task<IActionResult> GetMyProfile()
@@ -45,6 +45,7 @@ namespace ProjectManagement.Controllers
         }
 
         // PUT/POST: api/Profile/me  أو  api/Profile (حفظ وإنشاء بيانات الكرت بالكامل للمستخدم)
+        [Authorize]
         [HttpPut("me")]
         [HttpPost("me")]
         [HttpPut]
@@ -158,7 +159,7 @@ namespace ProjectManagement.Controllers
             });
         }
 
-        // GET: api/Profile/preview/{userId}  أو  GET: api/Profile/{userId} (معاينة كرت العميل العامة - حق زرر العين)
+        // GET: api/Profile/preview/{userId}  أو  GET: api/Profile/{userId} (معاينة كرت العميل العامة - حق زر العين)
         [AllowAnonymous]
         [HttpGet("{userId}")]
         [HttpGet("preview/{userId}")]
@@ -168,7 +169,6 @@ namespace ProjectManagement.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                // إذا لم يكن ID قد يكون اسم المستخدم UserName
                 user = await _userManager.FindByNameAsync(userId);
             }
 
