@@ -43,21 +43,6 @@ namespace ProjectManagement.Controllers
             var profileDto = await BuildUserProfileDtoAsync(user);
             return Ok(profileDto);
         }
-        // GET: api/Profile/user/{userId}
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetProfileByUserId(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-
-            if (user == null)
-            {
-                return NotFound("المستخدم غير موجود!");
-            }
-
-            var profile = await BuildUserProfileDtoAsync(user);
-
-            return Ok(profile);
-        }
 
         // PUT/POST: api/Profile/me  أو  api/Profile (حفظ وإنشاء بيانات الكرت بالكامل للمستخدم)
         [Authorize]
