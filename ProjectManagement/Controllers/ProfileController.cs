@@ -158,6 +158,124 @@ namespace ProjectManagement.Controllers
             });
         }
 
+        // ➕ POST: api/Profile/create-profile   (إنشاء وتعبئة بيانات كرت بروفايل جديد)
+        [Authorize]
+        [HttpPost("create-profile")]
+        
+        public async Task<IActionResult> CreateProfile([FromBody] CreateProfileDto model)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(model.UserId))
+            {
+                userId = model.UserId;
+            }
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("لم يتم التعرف على المستخدم الحالي أو تحديد الـ UserId!");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("المستخدم غير موجود!");
+            }
+
+            // حفظ وتعبئة بيانات الكرت للبروفايل
+            if (!string.IsNullOrEmpty(model.ProfilePhoto)) user.ProfilePhoto = model.ProfilePhoto;
+            if (!string.IsNullOrEmpty(model.BackgroundPhoto)) user.BackgroundPhoto = model.BackgroundPhoto;
+
+            user.NameEn = model.NameEn;
+            user.NameAr = model.NameAr;
+            user.TitleEn = model.TitleEn;
+            user.TitleAr = model.TitleAr;
+            user.CompanyEn = model.CompanyEn;
+            user.CompanyAr = model.CompanyAr;
+            user.AboutEn = model.AboutEn;
+            user.AboutAr = model.AboutAr;
+            user.LocationEn = model.LocationEn;
+            user.LocationAr = model.LocationAr;
+
+            if (!string.IsNullOrEmpty(model.Phone)) user.PhoneNumber = model.Phone;
+            user.Website = model.Website;
+            user.LinkedIn = model.LinkedIn;
+            user.WhatsApp = model.WhatsApp;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            // إضافة المهارات (Skills)
+            if (model.Skills != null)
+            {
+                var existingSkills = await _context.Skills.Where(s => s.UserId == user.Id).ToListAsync();
+                _context.Skills.RemoveRange(existingSkills);
+
+                foreach (var skillName in model.Skills)
+                {
+                    if (!string.IsNullOrWhiteSpace(skillName))
+                    {
+                        _context.Skills.Add(new Skills { Skill = skillName, UserId = user.Id });
+                    }
+                }
+            }
+
+            // إضافة الخبرات (Experiences)
+            if (model.Experiences != null)
+            {
+                var existingExperiences = await _context.Experiences.Where(e => e.UserId == user.Id).ToListAsync();
+                _context.Experiences.RemoveRange(existingExperiences);
+
+                foreach (var exp in model.Experiences)
+                {
+                    if (exp != null)
+                    {
+                        _context.Experiences.Add(new Experience
+                        {
+                            TitleEn = exp.TitleEn,
+                            TitleAr = exp.TitleAr,
+                            CompanyEn = exp.CompanyEn,
+                            CompanyAr = exp.CompanyAr,
+                            UserId = user.Id
+                        });
+                    }
+                }
+            }
+
+            // إضافة التعليم (Educations)
+            if (model.Educations != null)
+            {
+                var existingEducations = await _context.Educations.Where(e => e.UserId == user.Id).ToListAsync();
+                _context.Educations.RemoveRange(existingEducations);
+
+                foreach (var edu in model.Educations)
+                {
+                    if (edu != null)
+                    {
+                        _context.Educations.Add(new Education
+                        {
+                            DegreeEn = edu.DegreeEn,
+                            DegreeAr = edu.DegreeAr,
+                            FieldEn = edu.FieldEn,
+                            FieldAr = edu.FieldAr,
+                            UserId = user.Id
+                        });
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            var createdProfile = await BuildUserProfileDtoAsync(user);
+            return Ok(new
+            {
+                Message = "تم إنشاء وتعبئة كرت البروفايل بنجاح!",
+                Profile = createdProfile
+            });
+        }
+
         // ⭐️ GET: api/Profile/user/{userId}  (جلب جميع بيانات المستخدم بالكامل عن طريق User ID)
         [AllowAnonymous]
         [HttpGet("user/{userId}")]
