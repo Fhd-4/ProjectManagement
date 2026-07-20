@@ -6,17 +6,22 @@ namespace ProjectManagement.DTOs
 
         public string? BackgroundPhoto { get; set; }
 
-        public string? Name { get; set; }
+        public string? NameEn { get; set; }
+        public string? NameAr { get; set; }
 
-        public string? Title { get; set; }
+        public string? TitleEn { get; set; }
+        public string? TitleAr { get; set; }
 
-        public string? Company { get; set; }
+        public string? CompanyEn { get; set; }
+        public string? CompanyAr { get; set; }
 
-        public string? About { get; set; }
+        public string? AboutEn { get; set; }
+        public string? AboutAr { get; set; }
 
         public string? Phone { get; set; }
 
-        public string? Location { get; set; }
+        public string? LocationEn { get; set; }
+        public string? LocationAr { get; set; }
 
         public string? Website { get; set; }
 

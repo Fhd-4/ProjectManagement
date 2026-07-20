@@ -64,14 +64,17 @@ namespace ProjectManagement.Controllers
             }
 
             // تحديث البيانات الشخصية والصورة الشخصية والغلاف وحسابات التواصل
-            user.ProfilePhoto = model.ProfilePhoto;
-            user.BackgroundPhoto = model.BackgroundPhoto;
-            user.Name = model.Name;
-            user.Title = model.Title;
-            user.Company = model.Company;
-            user.About = model.About;
-            user.PhoneNumber = model.Phone;
-            user.Location = model.Location;
+            user.NameEn = model.NameEn;
+            user.NameAr = model.NameAr;
+            user.TitleEn = model.TitleEn;
+            user.TitleAr = model.TitleAr;
+            user.CompanyEn = model.CompanyEn;
+            user.CompanyAr = model.CompanyAr;
+            user.AboutEn = model.AboutEn;
+            user.AboutAr = model.AboutAr;
+            user.LocationEn = model.LocationEn;
+            user.LocationAr = model.LocationAr;
+
             user.Website = model.Website;
             user.LinkedIn = model.LinkedIn;
             user.WhatsApp = model.WhatsApp;
@@ -107,7 +110,16 @@ namespace ProjectManagement.Controllers
                 {
                     if (exp != null)
                     {
-                        _context.Experiences.Add(new Experience { Title = exp.Title, Company = exp.Company, UserId = user.Id });
+                        _context.Experiences.Add(new Experience
+                        {
+                            TitleEn = exp.TitleEn,
+                            TitleAr = exp.TitleAr,
+
+                            CompanyEn = exp.CompanyEn,
+                            CompanyAr = exp.CompanyAr,
+
+                            UserId = user.Id
+                        });
                     }
                 }
             }
@@ -122,7 +134,16 @@ namespace ProjectManagement.Controllers
                 {
                     if (edu != null)
                     {
-                        _context.Educations.Add(new Education { Degree = edu.Degree, Field = edu.Field, UserId = user.Id });
+                        _context.Educations.Add(new Education
+                        {
+                            DegreeEn = edu.DegreeEn,
+                            DegreeAr = edu.DegreeAr,
+
+                            FieldEn = edu.FieldEn,
+                            FieldAr = edu.FieldAr,
+
+                            UserId = user.Id
+                        });
                     }
                 }
             }
@@ -169,12 +190,21 @@ namespace ProjectManagement.Controllers
 
             var experiences = await _context.Experiences
                 .Where(e => e.UserId == user.Id)
-                .Select(e => new ExperienceDto { Title = e.Title, Company = e.Company })
+                .Select(e => new ExperienceDto {
+                    TitleEn = e.TitleEn,TitleAr = e.TitleAr,
+                    CompanyEn = e.CompanyEn,CompanyAr = e.CompanyAr})
+
                 .ToListAsync();
 
             var educations = await _context.Educations
                 .Where(e => e.UserId == user.Id)
-                .Select(e => new EducationDto { Degree = e.Degree, Field = e.Field })
+                .Select(e => new EducationDto {
+                    DegreeEn = e.DegreeEn,
+                    DegreeAr = e.DegreeAr,
+
+                    FieldEn = e.FieldEn,
+                    FieldAr = e.FieldAr
+                })
                 .ToListAsync();
 
             return new UserProfileDto
@@ -183,13 +213,22 @@ namespace ProjectManagement.Controllers
                 Username = user.UserName,
                 ProfilePhoto = user.ProfilePhoto,
                 BackgroundPhoto = user.BackgroundPhoto,
-                Name = user.Name,
-                Title = user.Title,
-                Company = user.Company,
-                About = user.About,
+                En = user.NameEn,
+                NameAr = user.NameAr,
+
+                TitleEn = user.TitleEn,
+                TitleAr = user.TitleAr,
+
+                CompanyEn = user.CompanyEn,
+                CompanyAr = user.CompanyAr,
+
+                AboutEn = user.AboutEn,
+                AboutAr = user.AboutAr,
+
+                LocationEn = user.LocationEn,
+                LocationAr = user.LocationAr,
                 Phone = user.PhoneNumber,
                 Email = user.Email,
-                Location = user.Location,
                 Website = user.Website,
                 LinkedIn = user.LinkedIn,
                 WhatsApp = user.WhatsApp,
