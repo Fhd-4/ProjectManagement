@@ -162,7 +162,7 @@ namespace ProjectManagement.Controllers
                 Unit = model.Unit,
 
                 SubscriptionStartDate = DateTime.UtcNow,
-                ExpirationDate = expirationDate
+                SubscriptionEndDate = expirationDate,
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
