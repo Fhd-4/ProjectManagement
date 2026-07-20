@@ -125,7 +125,65 @@ namespace ProjectManagement.Controllers
 
             return Unauthorized("الإيميل أو الرقم السري غير صحيح!");
         }
+        
+        [HttpPost("create-client")]
+        public async Task<IActionResult> CreateClient(CreateClientDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+
+            if (existingUser != null)
+            {
+                return BadRequest("Email already exists.");
+            }
+
+            DateTime expirationDate = model.Unit switch
+            {
+                "Minute" => DateTime.UtcNow.AddMinutes(model.Duration),
+                "Hour" => DateTime.UtcNow.AddHours(model.Duration),
+                "Day" => DateTime.UtcNow.AddDays(model.Duration),
+                "Month" => DateTime.UtcNow.AddMonths(model.Duration),
+                "Year" => DateTime.UtcNow.AddYears(model.Duration),
+                _ => DateTime.UtcNow
+            };
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+
+                NameEn = model.ClientName,
+
+                Duration = model.Duration,
+                Unit = model.Unit,
+
+                SubscriptionStartDate = DateTime.UtcNow,
+                ExpirationDate = expirationDate
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            if (!await _roleManager.RoleExistsAsync("Client"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Client"));
+            }
+
+            await _userManager.AddToRoleAsync(user, "Client");
+
+            return Ok(new
+            {
+                Message = "Client created successfully."
+            });
+        }
         // 3. ⭐️ الـ API الجديدة: جلب كل المستخدمين المسجلين في النظام
         // الرابط حقها بيكون: GET api/Auth/all-users
         [HttpGet("all-users")]

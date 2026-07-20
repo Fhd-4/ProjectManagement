@@ -29,6 +29,16 @@ namespace ProjectManagement.Models
 
         public string? WhatsApp { get; set; }
 
+        // Subscription information
+        public int Duration { get; set; }
+
+        // Minute - Hour - Day - Month - Year
+        public string? Unit { get; set; }
+
+        public DateTime SubscriptionStartDate { get; set; }
+
+        public DateTime SubscriptionEndDate { get; set; }
+
         public ICollection<Skills> Skills { get; set; } = new List<Skills>();
 
         public ICollection<Experience> Experiences { get; set; } = new List<Experience>();
