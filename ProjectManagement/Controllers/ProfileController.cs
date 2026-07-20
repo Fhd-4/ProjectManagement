@@ -213,7 +213,7 @@ namespace ProjectManagement.Controllers
                 Username = user.UserName,
                 ProfilePhoto = user.ProfilePhoto,
                 BackgroundPhoto = user.BackgroundPhoto,
-                En = user.NameEn,
+                NameEn = user.NameEn,
                 NameAr = user.NameAr,
 
                 TitleEn = user.TitleEn,

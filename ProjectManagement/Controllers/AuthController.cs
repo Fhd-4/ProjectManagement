@@ -98,15 +98,26 @@ namespace ProjectManagement.Controllers
                         id = user.Id,
                         username = user.UserName,
                         email = user.Email,
-                        name = user.Name,
-                        title = user.Title,
-                        company = user.Company,
+
+                        nameEn = user.NameEn,
+                        nameAr = user.NameAr,
+
+                        titleEn = user.TitleEn,
+                        titleAr = user.TitleAr,
+
+                        companyEn = user.CompanyEn,
+                        companyAr = user.CompanyAr,
+
                         profilePhoto = user.ProfilePhoto,
                         backgroundPhoto = user.BackgroundPhoto,
-                        location = user.Location,
+
+                        locationEn = user.LocationEn,
+                        locationAr = user.LocationAr,
+
                         website = user.Website,
                         linkedIn = user.LinkedIn,
                         whatsApp = user.WhatsApp,
+
                         roles = roles
                     }
                 });
