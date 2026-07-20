@@ -16,9 +16,8 @@ namespace ProjectManagement.Controllers
         }
 
         // POST: api/ImageUploader/Upload  أو  POST: api/ImageUploader
-        [HttpPost("Upload")]
         [HttpPost]
-        public async Task<IActionResult> Upload(IFormFile file)
+        public async Task<IActionResult> Upload( IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -49,15 +48,13 @@ namespace ProjectManagement.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var relativeUrl = $"/uploads/{uniqueFileName}";
-            var fullUrl = $"{Request.Scheme}://{Request.Host}{relativeUrl}";
+            var fullUrl = $"https://localhost:44367=/uploads/{uniqueFileName}";
 
             return Ok(new
             {
                 Message = "تم رفع الصورة بنجاح!",
                 Url = fullUrl,
-                url = fullUrl,
-                FilePath = relativeUrl,
+                FilePath = fullUrl,
                 FileName = uniqueFileName
             });
         }
