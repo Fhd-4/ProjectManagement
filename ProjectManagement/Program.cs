@@ -51,6 +51,17 @@ public partial class Program
 
         builder.Services.AddControllers();
 
+        // 4. إضافة إعدادات CORS للسماح بالاتصال من واجهات الفرونت إند (Angular / React)
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+        });
+
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
@@ -90,6 +101,7 @@ public partial class Program
             app.UseSwaggerUI();
         }
 
+        app.UseCors("AllowAll");
         app.UseHttpsRedirection();
         app.UseStaticFiles();
 
