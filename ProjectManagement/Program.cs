@@ -56,7 +56,7 @@ public partial class Program
         {
             options.AddPolicy("AllowAll", policy =>
             {
-                policy.AllowAnyOrigin()
+                policy.WithOrigins("https://my-profile-project-murex.vercel.app/")
                       .AllowAnyMethod()
                       .AllowAnyHeader();
             });
