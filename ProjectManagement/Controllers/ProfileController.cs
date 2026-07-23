@@ -67,6 +67,9 @@ namespace ProjectManagement.Controllers
             }
 
             // تحديث البيانات الشخصية والصورة الشخصية والغلاف وحسابات التواصل
+            if (!string.IsNullOrEmpty(model.ProfilePhoto)) user.ProfilePhoto = model.ProfilePhoto;
+            if (!string.IsNullOrEmpty(model.BackgroundPhoto)) user.BackgroundPhoto = model.BackgroundPhoto;
+
             user.NameEn = model.NameEn;
             user.NameAr = model.NameAr;
             user.TitleEn = model.TitleEn;
@@ -78,6 +81,7 @@ namespace ProjectManagement.Controllers
             user.LocationEn = model.LocationEn;
             user.LocationAr = model.LocationAr;
 
+            if (!string.IsNullOrEmpty(model.Phone)) user.PhoneNumber = model.Phone;
             user.Website = model.Website;
             user.LinkedIn = model.LinkedIn;
             user.WhatsApp = model.WhatsApp;
