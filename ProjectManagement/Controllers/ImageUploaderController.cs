@@ -48,7 +48,8 @@ namespace ProjectManagement.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var fullUrl = $"https://localhost:44367=/uploads/{uniqueFileName}";
+            var request = HttpContext.Request;
+            var fullUrl = $"{request.Scheme}://{request.Host}/uploads/{uniqueFileName}";
 
             return Ok(new
             {
