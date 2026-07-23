@@ -22,9 +22,9 @@ namespace ProjectManagement.Controllers
             _context = context;
         }
 
-        // GET: api/Profile/me  
+        // GET: api/Profile/GetMyProfile  
         [Authorize]
-        [HttpGet("me")]
+        [HttpGet("GetMyProfile")]
        
         public async Task<IActionResult> GetMyProfile()
         {
@@ -44,13 +44,13 @@ namespace ProjectManagement.Controllers
             return Ok(profileDto);
         }
 
-    
 
 
-        // PUT/POST: api/Profile/me  أو  api/Profile (حفظ وإنشاء بيانات الكرت بالكامل للمستخدم)
+
+        // PUT/POST: api/Profile/UpdateMyProfile   (حفظ وإنشاء بيانات الكرت بالكامل للمستخدم)
         [Authorize]
-        [HttpPut("me")]
-        [HttpPost("me")]
+        [HttpPut("UpdateMyProfile")]
+        [HttpPost("UpdateMyProfile")]
         
         public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateProfileDto model)
         {
