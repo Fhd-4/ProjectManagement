@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using ProjectManagement.Data;
 using ProjectManagement.DTOs;
 using ProjectManagement.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,13 +17,16 @@ namespace ProjectManagement.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _context = context;
         }
         // Hi am yusra
         // 1. رابط تسجيل حساب جديد: api/Auth/register
@@ -189,13 +193,22 @@ namespace ProjectManagement.Controllers
         [HttpGet("all-users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            // بنسحب اليوزرز وناخذ فقط (الـ ID، الإيميل، والـ Username) عشان الحماية وما نرسل الـ Password Hash
             var users = await _userManager.Users
                 .Select(u => new
                 {
                     u.Id,
-                    u.UserName,
-                    u.Email
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    ClientName = u.NameEn,
+                    u.Duration,
+                    u.Unit,
+                    u.SubscriptionStartDate,
+                    u.SubscriptionEndDate,
+                    Avatar = u.ProfilePhoto,
+                    Role = _context.UserRoles
+                        .Where(ur => ur.UserId == u.Id)
+                        .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                        .FirstOrDefault() ?? "Client"
                 })
                 .ToListAsync();
 
@@ -355,6 +368,73 @@ namespace ProjectManagement.Controllers
 
 
             return Ok("SuperAdmin created successfully");
+        }
+
+        [HttpDelete("delete-user/{userId}")]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("المستخدم غير موجود!");
+            }
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+            return Ok(new { Message = "تم حذف المستخدم بنجاح!" });
+        }
+
+        [HttpPut("edit-user/{userId}")]
+        public async Task<IActionResult> EditUser(string userId, [FromBody] EditClientDto model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("المستخدم غير موجود!");
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null && existingUser.Id != userId)
+            {
+                return BadRequest("البريد الإلكتروني مستخدم بالفعل!");
+            }
+
+            user.Email = model.Email;
+            user.UserName = model.Email;
+            user.NameEn = model.ClientName;
+            user.Duration = model.Duration;
+            user.Unit = model.Unit;
+
+            DateTime expirationDate = model.Unit switch
+            {
+                "Minute" => DateTime.UtcNow.AddMinutes(model.Duration),
+                "Hour" => DateTime.UtcNow.AddHours(model.Duration),
+                "Day" => DateTime.UtcNow.AddDays(model.Duration),
+                "Month" => DateTime.UtcNow.AddMonths(model.Duration),
+                "Year" => DateTime.UtcNow.AddYears(model.Duration),
+                _ => DateTime.UtcNow
+            };
+            user.SubscriptionEndDate = expirationDate;
+
+            if (!string.IsNullOrEmpty(model.Password))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var resetResult = await _userManager.ResetPasswordAsync(user, token, model.Password);
+                if (!resetResult.Succeeded)
+                {
+                    return BadRequest(resetResult.Errors);
+                }
+            }
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok(new { Message = "تم تحديث بيانات العميل بنجاح!" });
         }
     }
 }
